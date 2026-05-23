@@ -4,13 +4,19 @@ from app.models.article import Article
 from sqlalchemy.orm import Session
 from fastapi import Depends
 from app.dependencies import get_db
+from fastapi.staticfiles import StaticFiles
 
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="AMED SignalGrid API",
-    version="1.0.0"
+    description="AI-powered backend services for SignalGrid platform",
+    version="1.0.0",
+    contact={
+        "name": "AMED SignalGrid Team"
+    }
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def root():
