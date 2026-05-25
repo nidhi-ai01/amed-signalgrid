@@ -1,55 +1,43 @@
 from fastapi import FastAPI
-from app.database import engine, Base
-from app.models.article import Article
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from app.dependencies import get_db
 from fastapi.staticfiles import StaticFiles
 
+from app.database import engine, Base
+
+from app.routes.article import router as article_router
+from app.routes.upload import router as upload_router
+from app.models.document import Document
+from app.routes.search import router as search_router
+from app.routes.chat import router as chat_router
+from app.models.chunk import Chunk
+
+# Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Initialize FastAPI app
 app = FastAPI(
     title="AMED SignalGrid API",
-    description="AI-powered backend services for SignalGrid platform",
-    version="1.0.0",
-    contact={
-        "name": "AMED SignalGrid Team"
-    }
+    version="1.0.0"
 )
+
+# Mount static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Include routers
+app.include_router(article_router)
+app.include_router(upload_router)
+app.include_router(search_router)
+app.include_router(chat_router)
+
+# Root endpoint
 @app.get("/")
 def root():
     return {
         "message": "AMED SignalGrid Backend Running"
     }
 
+# Health check endpoint
 @app.get("/health")
 def health():
     return {
         "status": "healthy"
     }
-
-@app.post("/articles")
-def create_article(
-    title: str,
-    content: str,
-    source: str = None,
-    db: Session = Depends(get_db)
-):
-    article = Article(
-        title=title,
-        content=content,
-        source=source
-    )
-
-    db.add(article)
-    db.commit()
-    db.refresh(article)
-
-    return article
-
-@app.get("/articles")
-def get_articles(db: Session = Depends(get_db)):
-    articles = db.query(Article).all()
-    return articles
